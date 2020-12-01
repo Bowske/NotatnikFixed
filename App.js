@@ -1,35 +1,84 @@
-import React from 'react';
-import {StyleSheet, StatusBar} from 'react-native';
-
+import React, {useState, useEffect, useMemo} from 'react';
+import {StyleSheet, StatusBar, Alert} from 'react-native';
 import {library} from '@fortawesome/fontawesome-svg-core';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {faEnvelope, faLockOpen} from '@fortawesome/free-solid-svg-icons';
 import SignIn from './components/SignIn';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {AuthContext} from './components/context';
+import Notepad from './components/Notepad';
 
 library.add(faLockOpen, faEnvelope);
-
 const Stack = createStackNavigator();
 
 const App = () => {
+  const storeData = async (key, value) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (e) {
+      Alert.alert('Error', value);
+    }
+  };
+  const getData = async (key) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value) {
+        return value;
+      }
+    } catch (e) {
+      Alert.alert('Error', value);
+    }
+  };
+  //TODO: ZEROWANIE SIE HASEL PL;US NOTYFIKACJE O UDANYCH PROBACH
+  const authContext = React.useMemo(() => ({
+    signIn: (paswd, navigation) => {
+      getData('@haslo_Key').then((value) => {
+        if (value) {
+          value == paswd
+            ? navigation.navigate('Notepad')
+            : Alert.alert('zle haslo xd');
+        } else {
+          navigation.navigate('Notepad');
+        }
+      });
+    },
+    checkData: () => {
+      getData('@haslo_Key').then((value) => {
+        Alert.alert(value);
+      });
+    },
+  }));
+
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#7929ED" />
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen
-            name="SignIn"
-            component={SignIn}
-            options={{
-              title: 'Login',
-              headerStyle: {
-                backgroundColor: '#7929ED',
-              },
-              headerTitleAlign: 'center',
-            }}></Stack.Screen>
-        </Stack.Navigator>
-      </NavigationContainer>
+      <AuthContext.Provider value={authContext}>
+        <StatusBar barStyle="dark-content" backgroundColor="#7929ED" />
+        <NavigationContainer>
+          <Stack.Navigator>
+            <Stack.Screen
+              name="SignIn"
+              component={SignIn}
+              options={{
+                title: 'Login',
+                headerStyle: {
+                  backgroundColor: '#7929ED',
+                },
+                headerTitleAlign: 'center',
+              }}></Stack.Screen>
+            <Stack.Screen
+              name="Notepad"
+              component={Notepad}
+              options={{
+                title: 'Notepad',
+                headerStyle: {
+                  backgroundColor: '#7929ED',
+                },
+                headerTitleAlign: 'center',
+              }}></Stack.Screen>
+          </Stack.Navigator>
+        </NavigationContainer>
+      </AuthContext.Provider>
     </>
   );
 };
