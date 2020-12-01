@@ -62,6 +62,7 @@ const Notepad = ({navigation}) => {
         mode="contained"
         onPress={() => {
           storeData('@haslo_Key', userNewPassword);
+          setUserNewPassword('');
         }}>
         Change Password
       </Button>

@@ -1,15 +1,17 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {TextInput, Button} from 'react-native-paper';
 import {AuthContext} from './context';
 
 const SignIn = ({navigation}) => {
+  const textRef = useRef();
   const [userPassword, setUserPassword] = useState('');
-  const {signIn, checkData} = React.useContext(AuthContext);
+  const {signIn} = React.useContext(AuthContext);
   return (
     <View style={styles.wrapper}>
       <View style={{width: 300}}>
         <TextInput
+          ref={textRef}
           mode="outlined"
           label="Password"
           value={userPassword}
@@ -23,17 +25,9 @@ const SignIn = ({navigation}) => {
         mode="contained"
         onPress={() => {
           signIn(userPassword, navigation);
+          setUserPassword('');
         }}>
         Log in
-      </Button>
-      <Button
-        style={{margin: 20}}
-        icon="login"
-        mode="contained"
-        onPress={() => {
-          checkData();
-        }}>
-        Check
       </Button>
     </View>
   );

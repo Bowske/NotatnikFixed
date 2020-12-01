@@ -43,11 +43,6 @@ const App = () => {
         }
       });
     },
-    checkData: () => {
-      getData('@haslo_Key').then((value) => {
-        Alert.alert(value);
-      });
-    },
   }));
 
   return (
