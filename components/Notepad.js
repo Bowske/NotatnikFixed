@@ -12,13 +12,6 @@ const Notepad = () => {
     fetchMostUsed();
   }, []);
 
-  const fetchMostUsed = () => {
-    fetch('mostUsed.txt')
-      .then((response) => response.text())
-      .then((text) => console.log(text))
-      .catch((e) => console.log(e));
-  };
-
   const checkPassword = (pass) => {
     if (pass.length < 8) {
       Alert.alert('Password too short');
