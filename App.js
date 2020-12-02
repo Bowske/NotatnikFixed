@@ -13,13 +13,6 @@ library.add(faLockOpen, faEnvelope);
 const Stack = createStackNavigator();
 
 const App = () => {
-  const storeData = async (key, value) => {
-    try {
-      await AsyncStorage.setItem(key, value);
-    } catch (e) {
-      Alert.alert('Error', value);
-    }
-  };
   const getData = async (key) => {
     try {
       const value = await AsyncStorage.getItem(key);
@@ -30,14 +23,14 @@ const App = () => {
       Alert.alert('Error', value);
     }
   };
-  //TODO: ZEROWANIE SIE HASEL PL;US NOTYFIKACJE O UDANYCH PROBACH
+  //TODO:  NOTYFIKACJE O UDANYCH PROBACH
   const authContext = React.useMemo(() => ({
     signIn: (paswd, navigation) => {
       getData('@haslo_Key').then((value) => {
         if (value) {
           value == paswd
             ? navigation.navigate('Notepad')
-            : Alert.alert('zle haslo xd');
+            : Alert.alert('Wrong Password');
         } else {
           navigation.navigate('Notepad');
         }

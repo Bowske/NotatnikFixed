@@ -2,15 +2,30 @@ import React, {useState, useEffect} from 'react';
 import {StyleSheet, ScrollView, Alert} from 'react-native';
 import {TextInput, Button} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {AuthContext} from './context';
 
-const Notepad = ({navigation}) => {
+const Notepad = () => {
   const [note, setNote] = useState('');
   const [userNewPassword, setUserNewPassword] = useState('');
 
   useEffect(() => {
     getData('@note_Key');
+    fetchMostUsed();
   }, []);
+
+  const fetchMostUsed = () => {
+    fetch('mostUsed.txt')
+      .then((response) => response.text())
+      .then((text) => console.log(text))
+      .catch((e) => console.log(e));
+  };
+
+  const checkPassword = (pass) => {
+    if (pass.length < 8) {
+      Alert.alert('Password too short');
+      return 0;
+    }
+    return 1;
+  };
 
   const storeData = async (key, value) => {
     try {
@@ -46,7 +61,9 @@ const Notepad = ({navigation}) => {
       <Button
         style={{marginHorizontal: 20, marginBottom: 60}}
         mode="contained"
-        onPress={() => storeData('@note_Key', note)}>
+        onPress={() =>
+          storeData('@note_Key', note).then(Alert.alert('Note Saved'))
+        }>
         Save Note
       </Button>
       <TextInput
@@ -61,8 +78,12 @@ const Notepad = ({navigation}) => {
         style={{marginHorizontal: 20}}
         mode="contained"
         onPress={() => {
-          storeData('@haslo_Key', userNewPassword);
-          setUserNewPassword('');
+          if (checkPassword(userNewPassword)) {
+            storeData('@haslo_Key', userNewPassword).then(
+              Alert.alert('Password changed successfully'),
+            );
+            setUserNewPassword('');
+          }
         }}>
         Change Password
       </Button>
