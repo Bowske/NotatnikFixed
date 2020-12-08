@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import React, {useState, useEffect} from 'react';
 import {StyleSheet, StatusBar, Alert} from 'react-native';
 import {library} from '@fortawesome/fontawesome-svg-core';
 import {NavigationContainer} from '@react-navigation/native';
@@ -8,6 +8,7 @@ import SignIn from './components/SignIn';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AuthContext} from './components/context';
 import Notepad from './components/Notepad';
+import encryptionFuncs from './utils/encryptionFuncs.js';
 
 library.add(faLockOpen, faEnvelope);
 const Stack = createStackNavigator();
@@ -23,20 +24,37 @@ const App = () => {
       Alert.alert('Error', value);
     }
   };
+
   //TODO:  NOTYFIKACJE O UDANYCH PROBACH
-  const authContext = React.useMemo(() => ({
-    signIn: (paswd, navigation) => {
-      getData('@haslo_Key').then((value) => {
-        if (value) {
-          value == paswd
-            ? navigation.navigate('Notepad')
-            : Alert.alert('Wrong Password');
-        } else {
-          navigation.navigate('Notepad');
-        }
-      });
-    },
-  }));
+  const authContext = React.useMemo(
+    () => ({
+      signIn: (paswd, navigation) => {
+        getData('@haslo_Key').then((value) => {
+          if (value) {
+            console.log(value);
+            encryptionFuncs.generateKey(paswd, '123', 5000, 256).then((key) => {
+              console.log('Key:', key);
+              encryptionFuncs.encryptData(paswd, key).then(({cipher, iv}) => {
+                console.log('Encrypted:', cipher);
+                console.log('IV', iv);
+                encryptionFuncs.decryptData({value, iv}, key).then((text) => {
+                  console.log('Text:', text);
+                  console.log(value);
+                });
+              });
+            });
+
+            value == paswd
+              ? navigation.navigate('Notepad')
+              : Alert.alert('Wrong Password');
+          } else {
+            navigation.navigate('Notepad');
+          }
+        });
+      },
+    }),
+    [],
+  );
 
   return (
     <>

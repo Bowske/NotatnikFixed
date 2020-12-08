@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {StyleSheet, ScrollView, Alert} from 'react-native';
 import {TextInput, Button} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import encryptionFuncs from '../utils/encryptionFuncs.js';
 
 const Notepad = () => {
   const [note, setNote] = useState('');
@@ -9,7 +10,6 @@ const Notepad = () => {
 
   useEffect(() => {
     getData('@note_Key');
-    fetchMostUsed();
   }, []);
 
   const checkPassword = (pass) => {
@@ -27,6 +27,7 @@ const Notepad = () => {
       Alert.alert('Error', value);
     }
   };
+
   const getData = async (key) => {
     try {
       const value = await AsyncStorage.getItem(key);
@@ -35,6 +36,41 @@ const Notepad = () => {
       }
     } catch (e) {
       Alert.alert('Error', value);
+    }
+  };
+
+  const newPasswordProcessing = () => {
+    try {
+      encryptionFuncs
+        .generateKey(userNewPassword, '123', 5000, 256)
+        .then((key) => {
+          console.log('Key:', key);
+          encryptionFuncs
+            .encryptData(userNewPassword, key)
+            .then(({cipher, iv}) => {
+              console.log('Encrypted:', cipher);
+              console.log('IV', iv);
+              if (checkPassword(userNewPassword)) {
+                storeData('@haslo_Key', cipher).then(
+                  Alert.alert('Password changed successfully'),
+                );
+                setUserNewPassword('');
+              }
+              encryptionFuncs
+                .decryptData({cipher, iv}, key)
+                .then((text) => {
+                  console.log('Decrypted:', text);
+                })
+                .catch((error) => {
+                  console.log(error);
+                });
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+        });
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -70,14 +106,7 @@ const Notepad = () => {
       <Button
         style={{marginHorizontal: 20}}
         mode="contained"
-        onPress={() => {
-          if (checkPassword(userNewPassword)) {
-            storeData('@haslo_Key', userNewPassword).then(
-              Alert.alert('Password changed successfully'),
-            );
-            setUserNewPassword('');
-          }
-        }}>
+        onPress={() => newPasswordProcessing()}>
         Change Password
       </Button>
     </ScrollView>
