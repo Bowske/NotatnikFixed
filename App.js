@@ -31,22 +31,20 @@ const App = () => {
       signIn: (paswd, navigation) => {
         getData('@haslo_Key').then((value) => {
           if (value) {
-            console.log(value);
             encryptionFuncs.generateKey(paswd, '123', 5000, 256).then((key) => {
-              console.log('Key:', key);
               encryptionFuncs.encryptData(paswd, key).then(({cipher, iv}) => {
-                console.log('Encrypted:', cipher);
-                console.log('IV', iv);
-                encryptionFuncs.decryptData({value, iv}, key).then((text) => {
-                  console.log('Text:', text);
-                  console.log(value);
-                });
+                encryptionFuncs
+                  .decryptData2({value, iv}, key)
+                  .then((text) => {
+                    if (text == paswd) {
+                      navigation.navigate('Notepad');
+                    }
+                  })
+                  .catch((error) => {
+                    Alert.alert('Wrong Password');
+                  });
               });
             });
-
-            value == paswd
-              ? navigation.navigate('Notepad')
-              : Alert.alert('Wrong Password');
           } else {
             navigation.navigate('Notepad');
           }

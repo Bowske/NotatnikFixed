@@ -44,26 +44,15 @@ const Notepad = () => {
       encryptionFuncs
         .generateKey(userNewPassword, '123', 5000, 256)
         .then((key) => {
-          console.log('Key:', key);
           encryptionFuncs
             .encryptData(userNewPassword, key)
             .then(({cipher, iv}) => {
-              console.log('Encrypted:', cipher);
-              console.log('IV', iv);
               if (checkPassword(userNewPassword)) {
                 storeData('@haslo_Key', cipher).then(
                   Alert.alert('Password changed successfully'),
                 );
                 setUserNewPassword('');
               }
-              encryptionFuncs
-                .decryptData({cipher, iv}, key)
-                .then((text) => {
-                  console.log('Decrypted:', text);
-                })
-                .catch((error) => {
-                  console.log(error);
-                });
             })
             .catch((error) => {
               console.log(error);
