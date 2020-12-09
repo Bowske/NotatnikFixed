@@ -39,10 +39,12 @@ const Notepad = () => {
     }
   };
 
-  const newPasswordProcessing = () => {
+  const newPasswordProcessing = async () => {
     try {
+      let salt = await encryptionFuncs.generateSalt();
+      await storeData('@salt_Key', salt);
       encryptionFuncs
-        .generateKey(userNewPassword, '123', 5000, 256)
+        .generateKey(userNewPassword, salt, 5000, 256)
         .then((key) => {
           encryptionFuncs
             .encryptData(userNewPassword, key)

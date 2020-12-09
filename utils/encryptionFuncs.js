@@ -15,8 +15,8 @@ const encryptionFuncs = {
   decryptData: function (encryptedData, key) {
     return Aes.decrypt(encryptedData.cipher, key, encryptedData.iv);
   },
-  decryptData2: function (encryptedData, key) {
-    return Aes.decrypt(encryptedData.value, key, encryptedData.iv);
+  generateSalt: function () {
+    return Aes.randomKey(16);
   },
 };
 

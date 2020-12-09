@@ -29,12 +29,14 @@ const App = () => {
   const authContext = React.useMemo(
     () => ({
       signIn: (paswd, navigation) => {
-        getData('@haslo_Key').then((value) => {
+        getData('@haslo_Key').then(async (value) => {
           if (value) {
-            encryptionFuncs.generateKey(paswd, '123', 5000, 256).then((key) => {
+            let salt = await getData('@salt_Key');
+            encryptionFuncs.generateKey(paswd, salt, 5000, 256).then((key) => {
               encryptionFuncs.encryptData(paswd, key).then(({cipher, iv}) => {
+                cipher = value;
                 encryptionFuncs
-                  .decryptData2({value, iv}, key)
+                  .decryptData({cipher, iv}, key)
                   .then((text) => {
                     if (text == paswd) {
                       navigation.navigate('Notepad');
