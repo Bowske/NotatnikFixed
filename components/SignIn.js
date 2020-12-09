@@ -18,8 +18,12 @@ const SignIn = ({navigation}) => {
         setDisabledInput(true);
       }
     };
-    isPassInStorage();
-  }, [disabledInput]);
+    const unsubscribe = navigation.addListener('focus', () => {
+      isPassInStorage();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const getData = async (key) => {
     try {
@@ -50,7 +54,7 @@ const SignIn = ({navigation}) => {
                 }
               })
               .catch((error) => {
-                Alert.alert('Wrong Password', error);
+                Alert.alert('Wrong Password');
               });
           });
         });
