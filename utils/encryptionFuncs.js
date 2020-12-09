@@ -18,6 +18,9 @@ const encryptionFuncs = {
   generateSalt: function () {
     return Aes.randomKey(16);
   },
+  getIV: (key) => {
+    return key.substring(32, 64);
+  },
 };
 
 export default encryptionFuncs;

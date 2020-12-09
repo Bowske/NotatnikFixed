@@ -1,15 +1,42 @@
 import React, {useState, useEffect} from 'react';
-import {StyleSheet, ScrollView, Alert} from 'react-native';
-import {TextInput, Button} from 'react-native-paper';
+import {ScrollView, Alert} from 'react-native';
+import {TextInput, Button, Text} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import encryptionFuncs from '../utils/encryptionFuncs.js';
+import encryptionFuncs from './../utils/encryptionFuncs';
 
-const Notepad = () => {
+//TODO:  PODAJ KLUCZ W PROPSACH Z LOGINU DO NOTATKI
+const Notepad = ({route, navigation}) => {
   const [note, setNote] = useState('');
   const [userNewPassword, setUserNewPassword] = useState('');
+  const [clickableValue, setClickableValue] = useState(true);
+  const {pbkey} = route.params;
 
   useEffect(() => {
-    getData('@note_Key');
+    const fetchAndDecryptNote = async () => {
+      if (pbkey) {
+        const cipher = await getData('@note_Key');
+        const iv = encryptionFuncs.getIV(pbkey);
+        const decryptedNote = await encryptionFuncs.decryptData(
+          {cipher, iv},
+          pbkey,
+        );
+        console.log('Crypted note: ', cipher);
+        console.log('IV: ', iv);
+        console.log('Key: ', pbkey);
+        console.log('Decrypted note: ', decryptedNote);
+        setNote(decryptedNote);
+      }
+    };
+    const isPassInStorage = async () => {
+      const pass = await getData('@haslo_Key');
+      if (pass) {
+        setClickableValue(true);
+      } else {
+        setClickableValue(false);
+      }
+    };
+    isPassInStorage();
+    fetchAndDecryptNote();
   }, []);
 
   const checkPassword = (pass) => {
@@ -24,7 +51,7 @@ const Notepad = () => {
     try {
       await AsyncStorage.setItem(key, value);
     } catch (e) {
-      Alert.alert('Error', value);
+      console.log(e);
     }
   };
 
@@ -32,11 +59,16 @@ const Notepad = () => {
     try {
       const value = await AsyncStorage.getItem(key);
       if (value) {
-        setNote(value);
+        return value;
       }
     } catch (e) {
-      Alert.alert('Error', value);
+      console.log('There is no data to get');
     }
+  };
+  const storeNote = () => {
+    encryptionFuncs.encryptData(note, pbkey).then(({cipher, iv}) => {
+      storeData('@note_Key', cipher).then(Alert.alert('Note Saved'));
+    });
   };
 
   const newPasswordProcessing = async () => {
@@ -46,12 +78,19 @@ const Notepad = () => {
       encryptionFuncs
         .generateKey(userNewPassword, salt, 5000, 256)
         .then((key) => {
+          if (note) {
+            encryptionFuncs.encryptData(note, key).then(({cipher}) => {
+              storeData('@note_Key', cipher);
+            });
+          }
           encryptionFuncs
             .encryptData(userNewPassword, key)
-            .then(({cipher, iv}) => {
+            .then(({cipher}) => {
               if (checkPassword(userNewPassword)) {
                 storeData('@haslo_Key', cipher).then(
                   Alert.alert('Password changed successfully'),
+                  setClickableValue(true),
+                  navigation.navigate('SignIn'),
                 );
                 setUserNewPassword('');
               }
@@ -70,6 +109,7 @@ const Notepad = () => {
       <TextInput
         label="Note"
         multiline
+        disabled={!clickableValue}
         onChangeText={setNote}
         value={note}
         style={{
@@ -81,9 +121,8 @@ const Notepad = () => {
       <Button
         style={{marginHorizontal: 20, marginBottom: 60}}
         mode="contained"
-        onPress={() =>
-          storeData('@note_Key', note).then(Alert.alert('Note Saved'))
-        }>
+        disabled={!clickableValue}
+        onPress={() => storeNote()}>
         Save Note
       </Button>
       <TextInput
@@ -105,5 +144,3 @@ const Notepad = () => {
 };
 
 export default Notepad;
-
-const styles = StyleSheet.create({});
