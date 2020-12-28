@@ -20,10 +20,6 @@ const Notepad = ({route, navigation}) => {
           {cipher, iv},
           pbkey,
         );
-        console.log('Crypted note: ', cipher);
-        console.log('IV: ', iv);
-        console.log('Key: ', pbkey);
-        console.log('Decrypted note: ', decryptedNote);
         setNote(decryptedNote);
       }
     };
@@ -73,32 +69,32 @@ const Notepad = ({route, navigation}) => {
 
   const newPasswordProcessing = async () => {
     try {
-      let salt = await encryptionFuncs.generateSalt();
-      await storeData('@salt_Key', salt);
-      encryptionFuncs
-        .generateKey(userNewPassword, salt, 5000, 256)
-        .then((key) => {
-          if (note) {
-            encryptionFuncs.encryptData(note, key).then(({cipher}) => {
-              storeData('@note_Key', cipher);
-            });
-          }
-          encryptionFuncs
-            .encryptData(userNewPassword, key)
-            .then(({cipher}) => {
-              if (checkPassword(userNewPassword)) {
+      if (checkPassword(userNewPassword)) {
+        let salt = await encryptionFuncs.generateSalt();
+        await storeData('@salt_Key', salt);
+        encryptionFuncs
+          .generateKey(userNewPassword, salt, 5000, 256)
+          .then((key) => {
+            if (note) {
+              encryptionFuncs.encryptData(note, key).then(({cipher}) => {
+                storeData('@note_Key', cipher);
+              });
+            }
+            encryptionFuncs
+              .encryptData(userNewPassword, key)
+              .then(({cipher}) => {
                 storeData('@haslo_Key', cipher).then(
                   Alert.alert('Password changed successfully'),
                   setClickableValue(true),
                   navigation.navigate('SignIn'),
                 );
                 setUserNewPassword('');
-              }
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        });
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          });
+      }
     } catch (e) {
       console.error(e);
     }

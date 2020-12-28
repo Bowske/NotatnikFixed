@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {StyleSheet, View, Alert} from 'react-native';
+import {StyleSheet, View, Alert, Text} from 'react-native';
 import {TextInput, Button} from 'react-native-paper';
 import encryptionFuncs from '../utils/encryptionFuncs.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,6 +8,8 @@ const SignIn = ({navigation}) => {
   const textRef = useRef();
   const [userPassword, setUserPassword] = useState('');
   const [disabledInput, setDisabledInput] = useState(false);
+  const [numberOfTries, setNumberOfTries] = useState(5);
+  const [disabledButton, setDisabledButton] = useState(false);
 
   useEffect(() => {
     const isPassInStorage = async () => {
@@ -20,6 +22,7 @@ const SignIn = ({navigation}) => {
     };
     const unsubscribe = navigation.addListener('focus', () => {
       isPassInStorage();
+      setNumberOfTries(5);
     });
 
     return unsubscribe;
@@ -41,7 +44,6 @@ const SignIn = ({navigation}) => {
       if (value) {
         let salt = await getData('@salt_Key');
         encryptionFuncs.generateKey(paswd, salt, 5000, 256).then((key) => {
-          console.log('Key from sign in: ', key);
           encryptionFuncs.encryptData(paswd, key).then(({cipher, iv}) => {
             cipher = value;
             encryptionFuncs
@@ -55,6 +57,13 @@ const SignIn = ({navigation}) => {
               })
               .catch((error) => {
                 Alert.alert('Wrong Password');
+
+                setNumberOfTries(numberOfTries - 1);
+                if (numberOfTries == 1) {
+                  Alert.alert('Limit of tries has been exceeded');
+                  setDisabledInput(true);
+                  setDisabledButton(true);
+                }
               });
           });
         });
@@ -78,8 +87,10 @@ const SignIn = ({navigation}) => {
           secureTextEntry
           disabled={disabledInput}
         />
+        <Text>Number of tries left: {numberOfTries}</Text>
       </View>
       <Button
+        disabled={disabledButton}
         style={{margin: 20}}
         icon="login"
         mode="contained"
